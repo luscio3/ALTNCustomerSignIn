@@ -3,6 +3,7 @@ import SwiftUI
 /// New-customer details: first/middle/last name, email, gender.
 struct FullPersonInfoPage: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var loc: Localization
 
     @State private var first  = ""
     @State private var middle = ""
@@ -19,22 +20,23 @@ struct FullPersonInfoPage: View {
 
     var body: some View {
         PageContainer(
-            title: "Welcome! A few details",
+            title: loc.t(.welcomeFewDetails),
             canAdvance: canAdvance,
+            advanceTitle: loc.t(.next),
             onAdvance: advance
         ) {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 14) {
-                    FormField(label: "First name",  placeholder: "Jane",  text: $first)
-                    FormField(label: "Middle (optional)", placeholder: "M.", text: $middle)
+                    FormField(label: loc.t(.firstName),  placeholder: "Jane",  text: $first)
+                    FormField(label: loc.t(.middleOptional), placeholder: "M.", text: $middle)
                 }
-                FormField(label: "Last name", placeholder: "Doe", text: $last)
-                FormField(label: "Email",
+                FormField(label: loc.t(.lastName), placeholder: "Doe", text: $last)
+                FormField(label: loc.t(.email),
                           placeholder: "you@example.com",
                           text: $email,
                           keyboard: .emailAddress,
                           autocapitalize: false)
-                SectionTitle(text: "Gender")
+                SectionTitle(text: loc.t(.gender))
                 RadioList(options: Gender.allCases, selection: $gender) { g in
                     Text(g.displayName).font(.title3)
                 }

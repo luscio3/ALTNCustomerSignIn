@@ -5,12 +5,11 @@ import UIKit
 /// Stamps a signature PNG onto the last page of a consent PDF, matching the Flutter app's output.
 enum PDFSigner {
 
-    /// Embed `signaturePNG` in the lower-right of the last page of the template PDF.
+    /// Embed `signaturePNG` near the bottom-right of the last page of the template PDF.
     /// Returns the flattened PDF data.
     ///
-    /// Matches the Flutter coordinate system: A4 page-space box approximately
-    /// `x=274 y=492 w=234.67 h=98.67 points` (origin top-left in Syncfusion).
-    /// PDFKit origin is bottom-left, so we translate.
+    /// Anchored to the page bottom (rather than a hardcoded top-Y) so the signature
+    /// always lands below the text regardless of how long the template runs.
     static func embedSignature(
         templateData: Data,
         signaturePNG: Data
@@ -24,14 +23,13 @@ enum PDFSigner {
 
         let pageBounds = lastPage.bounds(for: .mediaBox)
 
-        // Signature box (~A4 lower-right). Syncfusion used 234.67×98.67 at topY=492 in top-left coords.
-        // Convert to PDFKit's bottom-left coords: newY = pageHeight - (topY + height).
-        let sigWidth: CGFloat  = 234.67
-        let sigHeight: CGFloat = 98.67
-        let topLeftY: CGFloat  = 492
-        let topLeftX: CGFloat  = (pageBounds.width - sigWidth) - 16
-        let originY = pageBounds.height - (topLeftY + sigHeight)
-        let drawRect = CGRect(x: max(0, topLeftX), y: max(0, originY), width: sigWidth, height: sigHeight)
+        let sigWidth: CGFloat    = 234.67
+        let sigHeight: CGFloat   = 98.67
+        let rightMargin: CGFloat = 16
+        let bottomMargin: CGFloat = 40
+        let originX = max(0, pageBounds.width - sigWidth - rightMargin)
+        let originY = bottomMargin   // PDFKit bottom-left coords
+        let drawRect = CGRect(x: originX, y: originY, width: sigWidth, height: sigHeight)
 
         // Render a new PDF with every page copied; overlay signature on the final page.
         let format = UIGraphicsPDFRendererFormat()

@@ -3,6 +3,7 @@ import SwiftUI
 /// Two-step page: pick specimen categories (multi), then enter who-sent-you + chain-of-custody radio.
 struct ChooseDrugsOrAlcoholPage: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var loc: Localization
 
     enum Step { case specimens, details }
     @State private var step: Step = .specimens
@@ -20,9 +21,9 @@ struct ChooseDrugsOrAlcoholPage: View {
 
     var body: some View {
         PageContainer(
-            title: step == .specimens ? "Choose specimen type(s)" : "Tell us more",
+            title: step == .specimens ? loc.t(.chooseSpecimenTypes) : loc.t(.tellUsMore),
             canAdvance: step == .specimens ? canAdvanceStep1 : canAdvanceStep2,
-            advanceTitle: step == .specimens ? "Next" : "Continue",
+            advanceTitle: step == .specimens ? loc.t(.next) : loc.t(.continueAction),
             onAdvance: advance
         ) {
             switch step {
@@ -35,11 +36,11 @@ struct ChooseDrugsOrAlcoholPage: View {
             case .details:
                 VStack(alignment: .leading, spacing: 20) {
                     FormField(
-                        label: "Who sent you? (Employer / School / Court)",
-                        placeholder: "Enter name",
+                        label: loc.t(.whoSentYou),
+                        placeholder: loc.t(.enterName),
                         text: $whoSent
                     )
-                    SectionTitle(text: "Chain-of-custody paperwork")
+                    SectionTitle(text: loc.t(.chainOfCustody))
                     RadioList(
                         options: DrugsRadio.allCases,
                         selection: $radio

@@ -16,9 +16,11 @@
 		22E848260F4CED99E644D8A4 /* ConsentPDFCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 503C112D79D3160E9403A4CC /* ConsentPDFCache.swift */; };
 		2735C647D2B4228FFE53857E /* SignaturePad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45721BB876C45FFC7B843E71 /* SignaturePad.swift */; };
 		287A36EA910182BBD0BAA547 /* AddressPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20629634E754109EBEC50060 /* AddressPage.swift */; };
+		3D9CEA3518858DFF6032D2DC /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BBFB3AB1197A3C6F744A29 /* Localization.swift */; };
 		48394ED12C843C963BC3B78F /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C4073EBD805984676244FE /* AppState.swift */; };
 		4A09CC4052EA509B953D64A2 /* FieldFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CAB5F45257549B310FF3AF4 /* FieldFormatters.swift */; };
 		5358D83C566677413E0146E3 /* Person.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3341CC5738A74CF6FC3D427 /* Person.swift */; };
+		540C360A97AAD2E5786540A8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 002C7B694540E5F8FBBA9DB5 /* Assets.xcassets */; };
 		5776445607CC5C950FD20C53 /* ChooseLabTestPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A7C6C71FC0C756BA928E2 /* ChooseLabTestPage.swift */; };
 		5D330A4921A3E22BDBCCEFBB /* StoreNumberIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7795122D87842D7A09690FCF /* StoreNumberIndicator.swift */; };
 		5EC0BBAA7D5AAAD498C4E93F /* Domain.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D95BEA8468D8AE04FD9C94 /* Domain.swift */; };
@@ -50,6 +52,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		002C7B694540E5F8FBBA9DB5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		03CE1B816EF81138344D5565 /* FastAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastAPIService.swift; sourceTree = "<group>"; };
 		0EFC534B6354E2876DBAAC75 /* TestLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestLabel.swift; sourceTree = "<group>"; };
 		1A240360CB7EB3D664A83B2F /* ConnectivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityMonitor.swift; sourceTree = "<group>"; };
@@ -58,6 +61,7 @@
 		28E9E180C530C667D0171D13 /* PageContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageContainer.swift; sourceTree = "<group>"; };
 		2EAA63234AA827D1A7E8B4E4 /* SelectFranchisePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectFranchisePage.swift; sourceTree = "<group>"; };
 		329B37A8515207B3780AE5D8 /* SelectCategoryPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCategoryPage.swift; sourceTree = "<group>"; };
+		33BBFB3AB1197A3C6F744A29 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		369A81D05B1CA5CDEE83A39A /* StdPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdPage.swift; sourceTree = "<group>"; };
 		3BCE9514123CBD17F26B02AB /* Endpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoints.swift; sourceTree = "<group>"; };
 		3D142462C89B18825A5120BF /* Bootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bootstrap.swift; sourceTree = "<group>"; };
@@ -90,7 +94,7 @@
 		E084B0A65A13463120D0FC71 /* ServiceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceInfo.swift; sourceTree = "<group>"; };
 		EBEB86C218F43CF1CD78873C /* CommonControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonControls.swift; sourceTree = "<group>"; };
 		F1D95BEA8468D8AE04FD9C94 /* Domain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Domain.swift; sourceTree = "<group>"; };
-		F648EDBCBBA91300D43DD827 /* ALTNCustomerSignIn.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ALTNCustomerSignIn.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F648EDBCBBA91300D43DD827 /* ALTNCustomerSignIn.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ALTNCustomerSignIn.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -160,6 +164,7 @@
 		A65AB64096F2B074A8237052 = {
 			isa = PBXGroup;
 			children = (
+				D955A6543AE98FBB8F4A4DAA /* Resources */,
 				81B6AF3DDC89268D702908D5 /* Sources */,
 				54F68783B0854DC54075F4BE /* Products */,
 			);
@@ -187,6 +192,14 @@
 			path = Support;
 			sourceTree = "<group>";
 		};
+		D955A6543AE98FBB8F4A4DAA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				002C7B694540E5F8FBBA9DB5 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		F257D663EE310C81C04B2CFA /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -198,6 +211,7 @@
 				503C112D79D3160E9403A4CC /* ConsentPDFCache.swift */,
 				3BCE9514123CBD17F26B02AB /* Endpoints.swift */,
 				03CE1B816EF81138344D5565 /* FastAPIService.swift */,
+				33BBFB3AB1197A3C6F744A29 /* Localization.swift */,
 				62715A160B6D5DF9F8C74F08 /* OfflineQueue.swift */,
 				B20113A7C06B0EE14E17F547 /* PDFSigner.swift */,
 				DECF3C3F20A0161A631127A0 /* UserSettings.swift */,
@@ -213,6 +227,7 @@
 			buildConfigurationList = C1EF5EEA3F3C2545A9E8E9FF /* Build configuration list for PBXNativeTarget "ALTNCustomerSignIn" */;
 			buildPhases = (
 				F35C981DD1008ED8C701D491 /* Sources */,
+				9113552762A22ED6DCEE40FE /* Resources */,
 			);
 			buildRules = (
 			);
@@ -232,7 +247,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1610;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					9F0A894BA10A2D14EC53589F = {
 						DevelopmentTeam = T83F4CXQH2;
@@ -258,6 +273,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9113552762A22ED6DCEE40FE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				540C360A97AAD2E5786540A8 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		F35C981DD1008ED8C701D491 /* Sources */ = {
@@ -288,6 +314,7 @@
 				4A09CC4052EA509B953D64A2 /* FieldFormatters.swift in Sources */,
 				A0528898166CA7F7864A8B9D /* FinishPage.swift in Sources */,
 				FBE0131B934F75B723D690AD /* FullPersonInfoPage.swift in Sources */,
+				3D9CEA3518858DFF6032D2DC /* Localization.swift in Sources */,
 				5EE3DAC62F27F7E46467D7BE /* NextButton.swift in Sources */,
 				6620D3F9CFC19B475F71A9E1 /* OfflineQueue.swift in Sources */,
 				D1D01A53553F536D82C32347 /* PDFSigner.swift in Sources */,
@@ -316,7 +343,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "ALTN Sign-in App";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
@@ -366,12 +392,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = T83F4CXQH2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -408,7 +433,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "ALTN Sign-in App";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
@@ -458,12 +482,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = T83F4CXQH2;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

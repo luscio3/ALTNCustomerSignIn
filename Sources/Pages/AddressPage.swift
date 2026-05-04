@@ -3,6 +3,7 @@ import SwiftUI
 /// New-customer address: street + ZIP.
 struct AddressPage: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var loc: Localization
 
     @State private var street  = ""
     @State private var zip     = ""
@@ -13,15 +14,16 @@ struct AddressPage: View {
 
     var body: some View {
         PageContainer(
-            title: "Your address",
+            title: loc.t(.yourAddress),
             canAdvance: canAdvance,
+            advanceTitle: loc.t(.next),
             onAdvance: advance
         ) {
             VStack(alignment: .leading, spacing: 20) {
-                FormField(label: "Street address",
+                FormField(label: loc.t(.streetAddress),
                           placeholder: "123 Main St",
                           text: $street)
-                FormField(label: "ZIP code",
+                FormField(label: loc.t(.zipCode),
                           placeholder: "75024",
                           text: $zip,
                           keyboard: .numberPad,

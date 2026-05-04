@@ -3,6 +3,7 @@ import SwiftUI
 /// Lab test picker (radio). Special case: selecting "STD or HIV" branches to the STD page.
 struct ChooseLabTestPage: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var loc: Localization
     @State private var selection: ServiceInfo?
 
     private var options: [ServiceInfo] {
@@ -11,8 +12,9 @@ struct ChooseLabTestPage: View {
 
     var body: some View {
         PageContainer(
-            title: "Choose a lab test",
+            title: loc.t(.chooseLabTest),
             canAdvance: selection != nil,
+            advanceTitle: loc.t(.next),
             onAdvance: advance
         ) {
             if options.isEmpty {

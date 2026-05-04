@@ -15,6 +15,7 @@ struct ConsentPage: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var connectivity: ConnectivityMonitor
     @EnvironmentObject var offlineQueue: OfflineQueue
+    @EnvironmentObject var loc: Localization
 
     @State private var currentIndex = 0
     @State private var signedPDFs:  [ConsentFormType: Data] = [:]
@@ -41,31 +42,38 @@ struct ConsentPage: View {
     }
 
     private var advanceTitle: String {
-        if isSubmitting { return "Submitting…" }
-        if isLast       { return "Save & Send" }
+        if isSubmitting { return loc.t(.submitting) }
+        if isLast       { return loc.t(.saveAndSend) }
         // Optional form with no signature: treat Next as "Skip this consent".
-        if currentType.isOptional && !hasSignature { return "Skip" }
-        return "Next"
+        if currentType.isOptional && !hasSignature { return loc.t(.skip) }
+        return loc.t(.next)
     }
 
     var body: some View {
         PageContainer(
-            title: "\(currentType.displayName) — \(currentIndex + 1) of \(requiredTypes.count)",
+            title: "\(currentType.displayName) — \(currentIndex + 1) \(loc.t(.ofCounter)) \(requiredTypes.count)",
             canAdvance: canAdvance,
             advanceTitle: advanceTitle,
-            onAdvance: advance
-        ) {
-            VStack(alignment: .leading, spacing: 20) {
-                progressStrip
-                header
-                pdfSection
-                signatureSection
-                ErrorBanner(text: error)
-                if currentType.isOptional {
-                    optionalHint
+            onAdvance: advance,
+            content: {
+                VStack(alignment: .leading, spacing: 20) {
+                    progressStrip
+                    header
+                    pdfSection
+                }
+            },
+            fixedContent: {
+                // SignaturePad lives OUTSIDE the outer ScrollView so the scroll's
+                // pan gesture can't steal finger touches from PencilKit.
+                VStack(alignment: .leading, spacing: 10) {
+                    signatureSection
+                    ErrorBanner(text: error)
+                    if currentType.isOptional {
+                        optionalHint
+                    }
                 }
             }
-        }
+        )
         // Reset page-local state whenever the current consent changes.
         // Clear the drawing in-place — do NOT replace the PKCanvasView instance,
         // because the UIViewRepresentable is still showing the original one.
@@ -100,9 +108,9 @@ struct ConsentPage: View {
                 .font(.title3.weight(.semibold))
             Spacer()
             if currentType.isOptional {
-                badge("Optional", color: .gray)
+                badge(loc.t(.optional), color: .gray)
             } else {
-                badge("Required", color: .red)
+                badge(loc.t(.required), color: .red)
             }
         }
     }
@@ -115,20 +123,20 @@ struct ConsentPage: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.3)))
             } else {
-                ProgressView("Loading…").frame(maxWidth: .infinity, minHeight: 200)
+                ProgressView(loc.t(.loading)).frame(maxWidth: .infinity, minHeight: 200)
             }
         }
     }
 
     private var signatureSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(text: "Sign here to agree")
+            SectionTitle(text: loc.t(.signHereToAgree))
             SignaturePad(canvas: $canvas, onChange: {
                 hasSignature = !canvas.drawing.strokes.isEmpty
             })
             .frame(height: 220)
             HStack {
-                Button("Clear") {
+                Button(loc.t(.clear)) {
                     canvas.drawing = PKDrawing()
                     hasSignature = false
                 }
@@ -136,7 +144,7 @@ struct ConsentPage: View {
                 .disabled(!hasSignature)
                 Spacer()
                 if !connectivity.isOnline {
-                    Label("Offline — will sync automatically", systemImage: "wifi.slash")
+                    Label(loc.t(.offlineWillSync), systemImage: "wifi.slash")
                         .font(.footnote)
                         .foregroundStyle(.orange)
                 }
@@ -145,7 +153,7 @@ struct ConsentPage: View {
     }
 
     private var optionalHint: some View {
-        Text("This consent is optional. Sign to accept, or tap \"Skip\" to decline.")
+        Text(loc.t(.optionalConsentHint))
             .font(.footnote)
             .foregroundStyle(.secondary)
     }
@@ -164,7 +172,7 @@ struct ConsentPage: View {
             }
         } else if !currentType.isOptional {
             // Defensive — canAdvance guards this, but double-check.
-            error = "Please sign before continuing."
+            error = loc.t(.pleaseSignBeforeContinuing)
             return
         }
 
@@ -177,13 +185,15 @@ struct ConsentPage: View {
 
     private func captureCurrentSignature() throws {
         guard let pngData = SignaturePad.exportPNG(from: canvas) else {
-            throw NSError(domain: "ConsentPage", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not read signature."])
+            throw NSError(domain: "ConsentPage", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: loc.t(.couldNotReadSignature)])
         }
         // Load the template off the cache (still sync on the main actor — it's small).
         let typeSnapshot = currentType
         let urlSnapshot = pdfURL
         guard let url = urlSnapshot, let templateData = try? Data(contentsOf: url) else {
-            throw NSError(domain: "ConsentPage", code: 2, userInfo: [NSLocalizedDescriptionKey: "Consent PDF not available. Reconnect briefly to download it."])
+            throw NSError(domain: "ConsentPage", code: 2,
+                          userInfo: [NSLocalizedDescriptionKey: loc.t(.consentPDFUnavailable)])
         }
         let signedPDF = try PDFSigner.embedSignature(templateData: templateData, signaturePNG: pngData)
         signedPDFs[typeSnapshot] = signedPDF
@@ -266,7 +276,8 @@ struct ConsentPage: View {
             customerId = person.clientId
         } else {
             guard let body = newCustomerBody else {
-                throw NSError(domain: "ConsentPage", code: 3, userInfo: [NSLocalizedDescriptionKey: "Missing customer details."])
+                throw NSError(domain: "ConsentPage", code: 3,
+                              userInfo: [NSLocalizedDescriptionKey: loc.t(.missingCustomerDetails)])
             }
             let person = try await FastAPIService().createPerson(jsonBody: body)
             customerId = person.clientId

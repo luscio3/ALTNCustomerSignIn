@@ -5,6 +5,7 @@ import SwiftUI
 struct PersonInfoPage: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var connectivity: ConnectivityMonitor
+    @EnvironmentObject var loc: Localization
 
     @State private var phone: String = ""
     @State private var dob: Date = defaultDob()
@@ -20,14 +21,14 @@ struct PersonInfoPage: View {
 
     var body: some View {
         PageContainer(
-            title: "Tell us about yourself",
+            title: loc.t(.tellUsAboutYourself),
             canAdvance: canAdvance,
-            advanceTitle: isSubmitting ? "Checking…" : "Next",
+            advanceTitle: isSubmitting ? loc.t(.checking) : loc.t(.next),
             onAdvance: lookup
         ) {
             VStack(alignment: .leading, spacing: 20) {
                 FormField(
-                    label: "Phone number",
+                    label: loc.t(.phoneNumber),
                     placeholder: "(555) 123-4567",
                     text: $phone,
                     keyboard: .phonePad,
@@ -36,7 +37,7 @@ struct PersonInfoPage: View {
                 .onChange(of: phone) { phone = FieldFormatters.phone($0) }
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Date of birth").font(.callout.weight(.medium)).foregroundStyle(.secondary)
+                    Text(loc.t(.dateOfBirth)).font(.callout.weight(.medium)).foregroundStyle(.secondary)
                     DatePicker("", selection: $dob, in: ...Date(), displayedComponents: .date)
                         .labelsHidden()
                         .datePickerStyle(.wheel)
@@ -45,6 +46,9 @@ struct PersonInfoPage: View {
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .fill(Color(.secondarySystemBackground))
                         )
+                        .environment(\.locale, loc.language == .spanish
+                                     ? Locale(identifier: "es_MX")
+                                     : Locale(identifier: "en_US"))
                 }
 
                 ErrorBanner(text: error)
@@ -101,10 +105,11 @@ struct PersonInfoPage: View {
 }
 
 private struct OfflineNotice: View {
+    @EnvironmentObject var loc: Localization
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "wifi.slash").foregroundStyle(.white)
-            Text("You're offline — your sign-in will be saved and sent automatically when internet returns.")
+            Text(loc.t(.offlineNoticeShort))
                 .font(.footnote)
                 .foregroundStyle(.white)
         }

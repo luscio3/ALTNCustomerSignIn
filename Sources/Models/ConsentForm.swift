@@ -12,11 +12,11 @@ enum ConsentFormType: String, Codable, CaseIterable, Identifiable, Hashable {
 
     var displayName: String {
         switch self {
-        case .customerInfo: return "Customer Info Release and Consent"
-        case .email:        return "Email Consent"
-        case .marketing:    return "Marketing Consent"
-        case .phone:        return "Phone & SMS Consent"
-        case .vitamin:      return "Vitamin Injection Consent"
+        case .customerInfo: return Localization.t(.consentCustomerInfo)
+        case .email:        return Localization.t(.consentEmail)
+        case .marketing:    return Localization.t(.consentMarketing)
+        case .phone:        return Localization.t(.consentPhone)
+        case .vitamin:      return Localization.t(.consentVitamin)
         }
     }
 

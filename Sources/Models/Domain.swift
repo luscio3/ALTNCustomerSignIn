@@ -52,8 +52,8 @@ enum Gender: String, Codable, CaseIterable, Identifiable, Hashable {
 
     var displayName: String {
         switch self {
-        case .male:   return "Male"
-        case .female: return "Female"
+        case .male:   return Localization.t(.male)
+        case .female: return Localization.t(.female)
         }
     }
 }
@@ -71,9 +71,9 @@ enum DrugsRadio: String, Codable, CaseIterable, Identifiable, Hashable {
 
     var displayName: String {
         switch self {
-        case .havePaper:     return "I have a chain-of-custody form"
-        case .dontHavePaper: return "I do not have a chain-of-custody form"
-        case .idk:           return "I'm not sure"
+        case .havePaper:     return Localization.t(.haveCocForm)
+        case .dontHavePaper: return Localization.t(.dontHaveCocForm)
+        case .idk:           return Localization.t(.notSure)
         }
     }
 }

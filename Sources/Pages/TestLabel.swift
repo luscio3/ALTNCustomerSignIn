@@ -28,14 +28,15 @@ struct TestLabel: View {
 
 /// Placeholder shown when the services catalog hasn't loaded yet (e.g. first launch while offline).
 struct EmptyCatalogNotice: View {
+    @EnvironmentObject var loc: Localization
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "wifi.exclamationmark")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
-            Text("Service catalog unavailable")
+            Text(loc.t(.catalogUnavailable))
                 .font(.title3.weight(.semibold))
-            Text("Connect this iPad to the Internet at least once to load the service list. The sign-in app stays usable afterward — even offline.")
+            Text(loc.t(.catalogUnavailableDetail))
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

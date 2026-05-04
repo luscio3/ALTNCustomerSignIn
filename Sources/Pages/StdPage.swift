@@ -4,6 +4,7 @@ import SwiftUI
 /// Matches the Flutter two-view toggle.
 struct StdPage: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var loc: Localization
 
     enum Mode: String, CaseIterable, Identifiable {
         case plans   = "Plans"
@@ -31,13 +32,16 @@ struct StdPage: View {
 
     var body: some View {
         PageContainer(
-            title: "STD / HIV Testing",
+            title: loc.t(.stdHivTesting),
             canAdvance: canAdvance,
+            advanceTitle: loc.t(.next),
             onAdvance: advance
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 Picker("", selection: $mode) {
-                    ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
+                    ForEach(Mode.allCases) { m in
+                        Text(m == .plans ? loc.t(.plans) : loc.t(.individualOptions)).tag(m)
+                    }
                 }
                 .pickerStyle(.segmented)
 

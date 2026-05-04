@@ -3,6 +3,7 @@ import SwiftUI
 /// DNA test picker (checklist, multi-select).
 struct ChooseDnaPage: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var loc: Localization
     @State private var selection: Set<ServiceInfo> = []
 
     private var options: [ServiceInfo] {
@@ -11,8 +12,9 @@ struct ChooseDnaPage: View {
 
     var body: some View {
         PageContainer(
-            title: "Choose DNA test(s)",
+            title: loc.t(.chooseDnaTests),
             canAdvance: !selection.isEmpty,
+            advanceTitle: loc.t(.next),
             onAdvance: advance
         ) {
             if options.isEmpty {
