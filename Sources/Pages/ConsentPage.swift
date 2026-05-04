@@ -24,6 +24,10 @@ struct ConsentPage: View {
     @State private var isSubmitting = false
     @State private var error: String?
 
+    // Phone-consent opt-outs. Toggle ON = "do not contact me via this channel".
+    @State private var doNotText = false
+    @State private var doNotCall = false
+
     // MARK: - Derived
 
     private var isNewCustomer: Bool { appState.draft.person == nil }
@@ -59,6 +63,9 @@ struct ConsentPage: View {
                 progressStrip
                 header
                 pdfSection
+                if currentType == .phone {
+                    phonePreferencesSection
+                }
                 signatureSection
                 ErrorBanner(text: error)
                 if currentType.isOptional {
@@ -117,6 +124,38 @@ struct ConsentPage: View {
             } else {
                 ProgressView("Loading…").frame(maxWidth: .infinity, minHeight: 200)
             }
+        }
+    }
+
+    private var phonePreferencesSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionTitle(text: "Do not contact me via:")
+            preferenceRow(
+                label: "Text Messaging",
+                isOn: $doNotText,
+                offText: "You are approving us communicating with text messages.",
+                onText: "We will never send you a text message."
+            )
+            preferenceRow(
+                label: "Phone Call",
+                isOn: $doNotCall,
+                offText: "You are approving us communicating by phone call.",
+                onText: "We will never call you on the phone."
+            )
+        }
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.gray.opacity(0.08)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.25)))
+    }
+
+    @ViewBuilder
+    private func preferenceRow(label: String, isOn: Binding<Bool>, offText: String, onText: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Toggle(label, isOn: isOn)
+                .font(.body.weight(.medium))
+            Text(isOn.wrappedValue ? onText : offText)
+                .font(.footnote)
+                .foregroundStyle(isOn.wrappedValue ? Color.red : Color.secondary)
         }
     }
 
