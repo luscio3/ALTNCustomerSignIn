@@ -8,7 +8,11 @@ struct PersonInfoPage: View {
     @EnvironmentObject var loc: Localization
 
     @State private var phone: String = ""
-    @State private var dob: Date = defaultDob()
+    /// `nil` until the customer actually picks a date — there is intentionally no
+    /// pre-filled default, so a date can never be accepted by accident. (Customers
+    /// were tapping Next on a pre-filled wheel and recording the wrong DOB.)
+    @State private var dob: Date? = nil
+    @State private var showPicker = false
     @State private var isSubmitting = false
     @State private var error: String?
 
@@ -16,7 +20,16 @@ struct PersonInfoPage: View {
         phone.filter(\.isNumber)
     }
     private var canAdvance: Bool {
-        !isSubmitting && phoneDigits.count == 10
+        !isSubmitting && phoneDigits.count == 10 && dob != nil
+    }
+
+    /// Non-optional binding for the wheel. Reading falls back to a sensible
+    /// starting position (~30 yrs ago); writing is what marks the DOB as set.
+    private var dobBinding: Binding<Date> {
+        Binding(
+            get: { dob ?? Self.defaultDob() },
+            set: { dob = $0 }
+        )
     }
 
     var body: some View {
@@ -38,17 +51,49 @@ struct PersonInfoPage: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(loc.t(.dateOfBirth)).font(.callout.weight(.medium)).foregroundStyle(.secondary)
-                    DatePicker("", selection: $dob, in: ...Date(), displayedComponents: .date)
-                        .labelsHidden()
-                        .datePickerStyle(.wheel)
-                        .frame(maxWidth: .infinity)
+
+                    // Tap-to-set field: shows a placeholder until a date is chosen,
+                    // then the formatted date. Tapping reveals the wheel below.
+                    Button {
+                        withAnimation { showPicker.toggle() }
+                    } label: {
+                        HStack {
+                            Text(dob.map(displayDob) ?? loc.t(.tapToSelectDate))
+                                .font(.title3.weight(dob == nil ? .regular : .semibold))
+                                .foregroundStyle(dob == nil ? Color.secondary : Color.primary)
+                            Spacer()
+                            Image(systemName: "calendar")
+                                .font(.title3)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 16)
+                        .frame(minHeight: 56)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .fill(Color(.secondarySystemBackground))
                         )
-                        .environment(\.locale, loc.language == .spanish
-                                     ? Locale(identifier: "es_MX")
-                                     : Locale(identifier: "en_US"))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .strokeBorder(dob == nil ? Color.orange.opacity(0.6) : Color.clear, lineWidth: 2)
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    if showPicker {
+                        DatePicker("", selection: dobBinding, in: ...Date(), displayedComponents: .date)
+                            .labelsHidden()
+                            .datePickerStyle(.wheel)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(Color(.secondarySystemBackground))
+                            )
+                            .environment(\.locale, loc.language == .spanish
+                                         ? Locale(identifier: "es_MX")
+                                         : Locale(identifier: "en_US"))
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                 }
 
                 ErrorBanner(text: error)
@@ -59,12 +104,23 @@ struct PersonInfoPage: View {
         }
         .onAppear {
             phone = appState.draft.phone.isEmpty ? "" : appState.draft.phone
-            if let d = appState.draft.dateOfBirth { dob = d }
+            // Restore a previously-entered DOB (e.g. customer tapped Back), so a
+            // returning customer isn't forced to re-enter it.
+            if let d = appState.draft.dateOfBirth {
+                dob = d
+            }
         }
     }
 
+    private func displayDob(_ date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.locale = loc.language == .spanish ? Locale(identifier: "es_MX") : Locale(identifier: "en_US")
+        fmt.dateStyle = .long
+        return fmt.string(from: date)
+    }
+
     private func lookup() {
-        guard let franchise = appState.franchise else { return }
+        guard let franchise = appState.franchise, let dob else { return }
         isSubmitting = true
         error = nil
 

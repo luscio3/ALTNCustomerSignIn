@@ -21,6 +21,13 @@ final class OfflineQueue: ObservableObject {
     private let fastAPI = FastAPIService()
     private let consentAPI = ConsentFormsAPI()
 
+    /// True while a drain pass is running. Prevents reentry — the same drain
+    /// can fire from Bootstrap, ConnectivityMonitor.onReconnect, and the
+    /// Admin sheet "Retry queued submissions now" button. Without this guard,
+    /// two passes can walk the same pending folder and both create a customer
+    /// + appointment → duplicates. Mirrors the admin app's OfflineCreateQueue.
+    private var isDraining = false
+
     private var rootDir: URL {
         let support = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dir = support.appendingPathComponent("PendingRequests", isDirectory: true)
@@ -75,7 +82,13 @@ final class OfflineQueue: ObservableObject {
 
     /// Walk every pending folder. For each one, upload consents + submit appointment.
     /// Successful folders are deleted; failures stay for the next drain.
+    ///
+    /// No-ops if a drain pass is already running — see `isDraining`.
     func drain() async {
+        guard !isDraining else { return }
+        isDraining = true
+        defer { isDraining = false }
+
         lastDrainError = nil
         guard let dirs = try? fm.contentsOfDirectory(at: rootDir, includingPropertiesForKeys: [.isDirectoryKey]) else {
             return
@@ -105,9 +118,26 @@ final class OfflineQueue: ObservableObject {
         if clientId == nil, fm.fileExists(atPath: infoURL.path) {
             let infoData = try Data(contentsOf: infoURL)
             do {
-                let person = try await fastAPI.createPerson(jsonBody: infoData)
+                // Preflight: if a previous attempt's POST /client already
+                // committed server-side but the iPad never got the response
+                // (transport blip after server commit), this lookup finds the
+                // customer by phone+DOB+franchise so we reuse them instead of
+                // creating a duplicate. fetchPerson returns nil on 404 = new.
+                // `try?` collapses a transport error to nil so we fall through
+                // to POST /client — that path is the original behavior and is
+                // unchanged for callers where the customer truly is new.
+                let preflight: Person? = (try? await preflightFindPerson(infoData: infoData)) ?? nil
+                let person: Person
+                if let existing = preflight {
+                    person = existing
+                } else {
+                    person = try await fastAPI.createPerson(jsonBody: infoData)
+                }
                 clientId = person.clientId
                 reqObj["client_id"] = person.clientId
+                // Persist the assigned client_id BEFORE doing anything else so
+                // a crash or another failure mid-replay never causes a future
+                // replay to create the customer a second time.
                 try JSONSerialization.data(withJSONObject: reqObj).write(to: reqURL, options: .atomic)
                 try? fm.removeItem(at: infoURL)
             } catch {
@@ -147,6 +177,31 @@ final class OfflineQueue: ObservableObject {
         let finalBody = try JSONSerialization.data(withJSONObject: reqObj)
         try await fastAPI.submitAppointment(jsonBody: finalBody)
         return true
+    }
+
+    /// Try to find an existing customer matching the queued info.json so we
+    /// don't create a duplicate. Returns nil if the lookup can't run (missing
+    /// fields, bad DOB, transport error), in which case the caller falls back
+    /// to POST /client as before.
+    private func preflightFindPerson(infoData: Data) async throws -> Person? {
+        guard let obj = try? JSONSerialization.jsonObject(with: infoData) as? [String: Any],
+              let phone     = obj["phone_number"]  as? String,
+              let dobStr    = obj["date_of_birth"] as? String,
+              let franchise = obj["franchise"]     as? String
+        else { return nil }
+
+        // info.json writes DOB as "YYYY-M-D" (not zero-padded — matches Flutter).
+        let parts = dobStr.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return nil }
+        var comps = DateComponents()
+        comps.year  = parts[0]
+        comps.month = parts[1]
+        comps.day   = parts[2]
+        comps.calendar = Calendar(identifier: .gregorian)
+        guard let dob = comps.date else { return nil }
+
+        let info = PersonInfo(phone: phone, dob: dob, franchise: Franchise(id: franchise))
+        return try await fastAPI.fetchPerson(info)
     }
 
     // MARK: - Counting

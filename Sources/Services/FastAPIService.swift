@@ -46,9 +46,14 @@ struct FastAPIService {
     }
 
     /// Create a new customer. Body is a merged JSON dict of PersonInfo + NameGender + Address fields.
+    /// Tighter timeout than the default 60s so a dead connection during the
+    /// final submit fails fast → enqueued for retry, instead of looking frozen
+    /// to the customer. The offline queue's dedup safeguards
+    /// (drain reentry guard + fetchPerson preflight) catch the "server
+    /// committed but client timed out" duplicate-customer case.
     func createPerson(jsonBody: Data) async throws -> Person {
         struct Resp: Codable { let client_id: Int }
-        let resp: Resp = try await Endpoints.fastAPI.post("/client", jsonBody: jsonBody)
+        let resp: Resp = try await Endpoints.fastAPI.post("/client", jsonBody: jsonBody, timeout: Self.submitTimeout)
         return Person(clientId: resp.client_id)
     }
 
@@ -56,6 +61,9 @@ struct FastAPIService {
 
     /// POST the completed appointment. FastAPI returns 201 on success.
     func submitAppointment(jsonBody: Data) async throws {
-        try await Endpoints.fastAPI.post("/client/appointment", jsonBody: jsonBody)
+        try await Endpoints.fastAPI.post("/client/appointment", jsonBody: jsonBody, timeout: Self.submitTimeout)
     }
+
+    /// Per-call timeout for the end-of-flow submit chain.
+    private static let submitTimeout: TimeInterval = 30
 }

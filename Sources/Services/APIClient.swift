@@ -43,13 +43,14 @@ struct APIClient {
     func post<T: Decodable>(
         _ path: String,
         jsonBody: Data?,
+        timeout: TimeInterval? = nil,
         as _: T.Type = T.self
     ) async throws -> T {
-        try await send(path: path, method: "POST", query: [], body: jsonBody, as: T.self, contentType: "application/json")
+        try await send(path: path, method: "POST", query: [], body: jsonBody, as: T.self, contentType: "application/json", timeout: timeout)
     }
 
-    func post(_ path: String, jsonBody: Data?) async throws {
-        _ = try await sendRaw(path: path, method: "POST", query: [], body: jsonBody, contentType: "application/json")
+    func post(_ path: String, jsonBody: Data?, timeout: TimeInterval? = nil) async throws {
+        _ = try await sendRaw(path: path, method: "POST", query: [], body: jsonBody, contentType: "application/json", timeout: timeout)
     }
 
     func delete(_ path: String) async throws {
@@ -65,12 +66,14 @@ struct APIClient {
         fileData: Data,
         fileName: String,
         fileMime: String = "application/pdf",
-        fields: [String: String] = [:]
+        fields: [String: String] = [:],
+        timeout: TimeInterval? = nil
     ) async throws -> Data {
         let url = try buildURL(path: path, query: [])
         let boundary = "Boundary-\(UUID().uuidString)"
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
+        if let timeout { req.timeoutInterval = timeout }
         for (k, v) in defaultHeaders { req.setValue(v, forHTTPHeaderField: k) }
         req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
@@ -109,9 +112,10 @@ struct APIClient {
         query: [URLQueryItem],
         body: Data?,
         as _: T.Type,
-        contentType: String? = nil
+        contentType: String? = nil,
+        timeout: TimeInterval? = nil
     ) async throws -> T {
-        let data = try await sendRaw(path: path, method: method, query: query, body: body, contentType: contentType)
+        let data = try await sendRaw(path: path, method: method, query: query, body: body, contentType: contentType, timeout: timeout)
         do {
             let dec = JSONDecoder()
             dec.dateDecodingStrategy = .custom { decoder in
@@ -138,11 +142,13 @@ struct APIClient {
         method: String,
         query: [URLQueryItem],
         body: Data?,
-        contentType: String?
+        contentType: String?,
+        timeout: TimeInterval? = nil
     ) async throws -> Data {
         let url = try buildURL(path: path, query: query)
         var req = URLRequest(url: url)
         req.httpMethod = method
+        if let timeout { req.timeoutInterval = timeout }
         for (k, v) in defaultHeaders { req.setValue(v, forHTTPHeaderField: k) }
         if let ct = contentType { req.setValue(ct, forHTTPHeaderField: "Content-Type") }
         req.httpBody = body

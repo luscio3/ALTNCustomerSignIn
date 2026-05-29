@@ -23,6 +23,8 @@ struct ConsentPage: View {
     @State private var hasSignature = false
     @State private var pdfURL: URL?
     @State private var isSubmitting = false
+    @State private var isAdvancing = false   // covers the off-main embed window so a double-tap can't double-stamp / double-advance
+    @State private var submitPhase: String?
     @State private var error: String?
 
     // MARK: - Derived
@@ -35,14 +37,14 @@ struct ConsentPage: View {
     private var isLast: Bool { currentIndex == requiredTypes.count - 1 }
 
     private var canAdvance: Bool {
-        if isSubmitting { return false }
+        if isSubmitting || isAdvancing { return false }
         // Required forms: must have a signature.
         // Optional forms: Next always enabled (either signed or skipped).
         return currentType.isOptional || hasSignature
     }
 
     private var advanceTitle: String {
-        if isSubmitting { return loc.t(.submitting) }
+        if isSubmitting { return submitPhase ?? loc.t(.submitting) }
         if isLast       { return loc.t(.saveAndSend) }
         // Optional form with no signature: treat Next as "Skip this consent".
         if currentType.isOptional && !hasSignature { return loc.t(.skip) }
@@ -161,59 +163,97 @@ struct ConsentPage: View {
     // MARK: - Advance / skip / submit
 
     private func advance() {
+        // Reentry guard: a fast double-tap previously sneaked a second tap
+        // through SwiftUI's render cycle before the button disabled itself.
+        // The new off-main embed widens that window, so guard explicitly.
+        if isSubmitting || isAdvancing { return }
         error = nil
-        // If the current page has a signature, capture + stamp the PDF now.
+        isAdvancing = true
+
+        // Validate up front; for the final consent flip `isSubmitting` BEFORE
+        // any heavy work so the button label changes immediately. Previously
+        // captureCurrentSignature() ran synchronously on the main thread for
+        // ~0.5–2s (PDFKit PDF flatten + signature draw) before the submit task
+        // was even created — that hitch read on screen as a freeze right after
+        // the customer tapped "Save & Send".
+        let pngSnapshot: Data?
         if hasSignature {
-            do {
-                try captureCurrentSignature()
-            } catch let e {
-                error = e.localizedDescription
+            guard let png = SignaturePad.exportPNG(from: canvas) else {
+                error = loc.t(.couldNotReadSignature)
+                isAdvancing = false
                 return
             }
-        } else if !currentType.isOptional {
+            pngSnapshot = png
+        } else if currentType.isOptional {
+            pngSnapshot = nil
+        } else {
             // Defensive — canAdvance guards this, but double-check.
             error = loc.t(.pleaseSignBeforeContinuing)
+            isAdvancing = false
             return
         }
 
-        if isLast {
-            submit()
-        } else {
-            currentIndex += 1
-        }
-    }
-
-    private func captureCurrentSignature() throws {
-        guard let pngData = SignaturePad.exportPNG(from: canvas) else {
-            throw NSError(domain: "ConsentPage", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: loc.t(.couldNotReadSignature)])
-        }
-        // Load the template off the cache (still sync on the main actor — it's small).
         let typeSnapshot = currentType
         let urlSnapshot = pdfURL
-        guard let url = urlSnapshot, let templateData = try? Data(contentsOf: url) else {
-            throw NSError(domain: "ConsentPage", code: 2,
-                          userInfo: [NSLocalizedDescriptionKey: loc.t(.consentPDFUnavailable)])
-        }
-        let signedPDF = try PDFSigner.embedSignature(templateData: templateData, signaturePNG: pngData)
-        signedPDFs[typeSnapshot] = signedPDF
-    }
+        let wasLast = isLast
 
-    private func submit() {
-        isSubmitting = true
-        error = nil
+        if wasLast {
+            isSubmitting = true
+            submitPhase = loc.t(.submitting)
+        }
+
         Task {
-            defer { isSubmitting = false }
-            do {
-                try await performSubmit()
-                appState.path = [.finish]
-            } catch {
-                self.error = error.localizedDescription
+            defer { isAdvancing = false }
+
+            // Stamp the signature on the PDF off the main thread (CPU-heavy
+            // PDFKit work). PencilKit's PNG export must run on main, hence
+            // the split.
+            if let png = pngSnapshot {
+                do {
+                    let signed = try await Self.embedOffMain(png: png, templateURL: urlSnapshot)
+                    signedPDFs[typeSnapshot] = signed
+                } catch {
+                    self.error = error.localizedDescription
+                    isSubmitting = false
+                    submitPhase = nil
+                    return
+                }
+            }
+
+            if wasLast {
+                await runSubmit()
+            } else {
+                currentIndex += 1
             }
         }
     }
 
-    private func performSubmit() async throws {
+    /// Off-main signature stamping. Reads the template + runs PDFSigner on a
+    /// detached task so the main thread stays responsive.
+    private static func embedOffMain(png: Data, templateURL: URL?) async throws -> Data {
+        guard let url = templateURL else {
+            throw NSError(domain: "ConsentPage", code: 2,
+                          userInfo: [NSLocalizedDescriptionKey: "Consent PDF unavailable."])
+        }
+        return try await Task.detached(priority: .userInitiated) {
+            let templateData = try Data(contentsOf: url)
+            return try PDFSigner.embedSignature(templateData: templateData, signaturePNG: png)
+        }.value
+    }
+
+    private func runSubmit() async {
+        defer { isSubmitting = false; submitPhase = nil }
+        do {
+            try await performSubmit { phase in
+                self.submitPhase = phase
+            }
+            appState.path = [.finish]
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func performSubmit(progress: @MainActor @escaping (String) -> Void) async throws {
         // 1. Build the list of signed consents to upload. Order is stable (requiredTypes order).
         var signed: [(type: ConsentFormType, formId: Int, pdf: Data)] = []
         for type in requiredTypes {
@@ -243,7 +283,8 @@ struct ConsentPage: View {
                 appointmentBody: appointmentBody,
                 newCustomerBody: newCustomerBody,
                 signed: signed,
-                emailOK: emailOK, smsOK: smsOK, mktOK: mktOK
+                emailOK: emailOK, smsOK: smsOK, mktOK: mktOK,
+                progress: progress
             )
         } catch {
             let queueItems = signed.map { s in
@@ -268,7 +309,8 @@ struct ConsentPage: View {
         appointmentBody: Data,
         newCustomerBody: Data?,
         signed: [(type: ConsentFormType, formId: Int, pdf: Data)],
-        emailOK: Bool, smsOK: Bool, mktOK: Bool
+        emailOK: Bool, smsOK: Bool, mktOK: Bool,
+        progress: @MainActor (String) -> Void
     ) async throws {
         var customerId: Int
         var finalAppointmentBody = appointmentBody
@@ -279,6 +321,7 @@ struct ConsentPage: View {
                 throw NSError(domain: "ConsentPage", code: 3,
                               userInfo: [NSLocalizedDescriptionKey: loc.t(.missingCustomerDetails)])
             }
+            await progress(loc.t(.submitPhaseCreatingAccount))
             let person = try await FastAPIService().createPerson(jsonBody: body)
             customerId = person.clientId
             if var obj = try JSONSerialization.jsonObject(with: appointmentBody) as? [String: Any] {
@@ -288,7 +331,9 @@ struct ConsentPage: View {
         }
 
         let api = ConsentFormsAPI()
-        for s in signed {
+        let total = signed.count
+        for (idx, s) in signed.enumerated() {
+            await progress(loc.tUploadingConsent(idx + 1, of: total))
             _ = try await api.uploadSigned(
                 consentFormId: s.formId,
                 customerId: customerId,
@@ -302,8 +347,10 @@ struct ConsentPage: View {
 
         // Record the customer's email/SMS opt-in decision so the marketing
         // dispatcher honors it on future campaigns.
+        await progress(loc.t(.submitPhaseSavingPrefs))
         try await api.updateCommunicationPrefs(customerId: customerId, email: emailOK, sms: smsOK)
 
+        await progress(loc.t(.submitPhaseSavingAppointment))
         try await FastAPIService().submitAppointment(jsonBody: finalAppointmentBody)
     }
 

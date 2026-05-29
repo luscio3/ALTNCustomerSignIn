@@ -53,6 +53,14 @@ final class Localization: ObservableObject {
         case .spanish: return key.es
         }
     }
+
+    /// "Uploading consent {n} of {m}…" / "Subiendo consentimiento {n} de {m}…"
+    func tUploadingConsent(_ n: Int, of m: Int) -> String {
+        switch language {
+        case .english: return "Uploading consent \(n) of \(m)…"
+        case .spanish: return "Subiendo consentimiento \(n) de \(m)…"
+        }
+    }
 }
 
 // MARK: - Translation Keys
@@ -86,6 +94,7 @@ enum LocKey {
     case tellUsAboutYourself
     case phoneNumber
     case dateOfBirth
+    case tapToSelectDate
     case offlineNoticeShort
 
     // ── FullPersonInfoPage ──
@@ -138,6 +147,12 @@ enum LocKey {
     case consentVitamin
     case ofCounter   // "X of Y" → "X de Y"
 
+    // ── ConsentPage submit phase labels (shown on the disabled button) ──
+    case submitPhaseCreatingAccount
+    case submitPhaseUploadingConsentTemplate   // "Uploading consent {n} of {m}…" — see tUploadingConsent
+    case submitPhaseSavingPrefs
+    case submitPhaseSavingAppointment
+
     // ── FinishPage ──
     case allSet
     case signedInSeat
@@ -177,6 +192,7 @@ enum LocKey {
         case .tellUsAboutYourself:        return "Tell us about yourself"
         case .phoneNumber:                return "Phone number"
         case .dateOfBirth:                return "Date of birth"
+        case .tapToSelectDate:            return "Tap to select your date of birth"
         case .offlineNoticeShort:
             return "You're offline — your sign-in will be saved and sent automatically when internet returns."
 
@@ -227,6 +243,11 @@ enum LocKey {
         case .consentVitamin:             return "Vitamin Injection Consent"
         case .ofCounter:                  return "of"
 
+        case .submitPhaseCreatingAccount:        return "Creating account…"
+        case .submitPhaseUploadingConsentTemplate: return "Uploading consent…"
+        case .submitPhaseSavingPrefs:            return "Saving preferences…"
+        case .submitPhaseSavingAppointment:      return "Saving sign-in…"
+
         case .allSet:                     return "All set!"
         case .signedInSeat:               return "You're signed in — please have a seat."
         case .offlineQueuedNotice:
@@ -265,6 +286,7 @@ enum LocKey {
         case .tellUsAboutYourself:        return "Cuéntenos sobre usted"
         case .phoneNumber:                return "Número de teléfono"
         case .dateOfBirth:                return "Fecha de nacimiento"
+        case .tapToSelectDate:            return "Toque para seleccionar su fecha de nacimiento"
         case .offlineNoticeShort:
             return "Está sin conexión — su registro se guardará y se enviará automáticamente cuando regrese el internet."
 
@@ -314,6 +336,11 @@ enum LocKey {
         case .consentPhone:               return "Consentimiento de Teléfono y SMS"
         case .consentVitamin:             return "Consentimiento de Inyección de Vitaminas"
         case .ofCounter:                  return "de"
+
+        case .submitPhaseCreatingAccount:        return "Creando cuenta…"
+        case .submitPhaseUploadingConsentTemplate: return "Subiendo consentimiento…"
+        case .submitPhaseSavingPrefs:            return "Guardando preferencias…"
+        case .submitPhaseSavingAppointment:      return "Guardando registro…"
 
         case .allSet:                     return "¡Todo listo!"
         case .signedInSeat:               return "Ya está registrado — por favor tome asiento."

@@ -39,7 +39,8 @@ struct ConsentFormsAPI {
                 "email_agreement":     emailAgreement     ? "1" : "0",
                 "sms_agreement":       smsAgreement       ? "1" : "0",
                 "marketing_agreement": marketingAgreement ? "1" : "0",
-            ]
+            ],
+            timeout: 30
         )
         let resp = try JSONDecoder().decode(Resp.self, from: data)
         return resp.id
@@ -63,6 +64,6 @@ struct ConsentFormsAPI {
             "email": email,
             "sms":   sms,
         ])
-        try await Endpoints.consentAPI.post("/customer-communication-prefs/\(customerId)", jsonBody: body)
+        try await Endpoints.consentAPI.post("/customer-communication-prefs/\(customerId)", jsonBody: body, timeout: 30)
     }
 }
