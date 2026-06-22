@@ -105,4 +105,7 @@ struct DrugsOrAlcoholData: Hashable {
     let radio: DrugsRadio
     let specimens: [ServiceInfo]
     let whoSent: String
+    /// B2B client id when "who sent you" matched one of our accounts. Drives the
+    /// appointment ⇄ client auto-link; nil for free-text referrers.
+    var whoSentClientId: Int? = nil
 }

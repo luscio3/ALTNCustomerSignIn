@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <!-- Restrictions payload: grant Autonomous Single App Mode to the
+                 ALTN Sign-In app. Supervised devices only (iOS 7.0+). -->
+            <key>PayloadType</key>
+            <string>com.apple.applicationaccess</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>PayloadIdentifier</key>
+            <string>cloud.altn.kiosk.restrictions.asam</string>
+            <key>PayloadUUID</key>
+            <string>5760F6A1-9E4D-49E2-87AB-F12840ADDE91</string>
+            <key>PayloadDisplayName</key>
+            <string>ALTN Kiosk — Autonomous Single App Mode</string>
+            <key>autonomousSingleAppModePermittedAppIDs</key>
+            <array>
+                <string>cloud.altn.customer-signin</string>
+            </array>
+        </dict>
+    </array>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+    <key>PayloadIdentifier</key>
+    <string>cloud.altn.kiosk.asam</string>
+    <key>PayloadUUID</key>
+    <string>8841DB1D-C5E0-4F41-A8D2-20543CF193D5</string>
+    <key>PayloadDisplayName</key>
+    <string>ALTN Sign-In Kiosk Lock</string>
+    <key>PayloadDescription</key>
+    <string>Allows the ALTN Sign-In app to lock this iPad to itself (Autonomous Single App Mode). Requires a supervised device.</string>
+    <key>PayloadOrganization</key>
+    <string>JG Johnson Holdings LLC</string>
+    <key>PayloadScope</key>
+    <string>System</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false/>
+</dict>
+</plist>

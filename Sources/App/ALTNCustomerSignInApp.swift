@@ -7,6 +7,9 @@ struct ALTNCustomerSignInApp: App {
     @StateObject private var connectivity = ConnectivityMonitor()
     @StateObject private var offlineQueue = OfflineQueue()
     @StateObject private var localization = Localization.shared
+    @StateObject private var kiosk = KioskMode.shared
+
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         // Kick off background bootstrap: services catalog + consent PDFs.
@@ -20,6 +23,7 @@ struct ALTNCustomerSignInApp: App {
                 .environmentObject(connectivity)
                 .environmentObject(offlineQueue)
                 .environmentObject(localization)
+                .environmentObject(kiosk)
                 .preferredColorScheme(.light)
                 .task {
                     await Bootstrap.run(
@@ -28,6 +32,13 @@ struct ALTNCustomerSignInApp: App {
                         offlineQueue: offlineQueue
                     )
                 }
+        }
+        .onChange(of: scenePhase) { phase in
+            switch phase {
+            case .active:     kiosk.enforceOnForeground()
+            case .background: kiosk.armOnBackground()
+            default:          break
+            }
         }
     }
 }

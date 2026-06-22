@@ -56,6 +56,10 @@ enum AppointmentPayloadBuilder {
             if let d = draft.drugsOrAlcohol {
                 services = d.specimens.map(\.apiValue)
                 appt["who_sent_you"] = d.whoSent
+                // Auto-link the referrer to a known B2B client account when matched.
+                if let clientId = d.whoSentClientId {
+                    appt["who_sent_you_client_id"] = clientId
+                }
                 appt[DrugsRadio.apiField] = d.radio.apiValue
             }
         case .dna:
