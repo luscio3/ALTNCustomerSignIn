@@ -22,5 +22,5 @@ enum Endpoints {
 enum Secrets {
     /// Hard-coded same as ALTNAdmin macOS app. This is a kiosk on iPads you physically control,
     /// so baking the token in is acceptable per the current auth model.
-    static let altnAdminBearerToken = "altn-v2-8f3k9d2m4p7q1w6x0z5v"
+    static let altnAdminBearerToken = "altn-v2-96lasxcudhb0ziy27bg50c9r"
 }
