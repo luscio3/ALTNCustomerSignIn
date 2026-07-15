@@ -19,6 +19,9 @@ struct ConsentPage: View {
 
     @State private var currentIndex = 0
     @State private var signedPDFs:  [ConsentFormType: Data] = [:]
+    /// Raw signature PNGs, kept alongside the stamped PDFs so the server can
+    /// composite the fields onto the template (server-side overlay).
+    @State private var signaturePNGs: [ConsentFormType: Data] = [:]
     @State private var canvas = PKCanvasView()
     @State private var hasSignature = false
     @State private var pdfURL: URL?
@@ -212,6 +215,7 @@ struct ConsentPage: View {
                 do {
                     let signed = try await Self.embedOffMain(png: png, templateURL: urlSnapshot)
                     signedPDFs[typeSnapshot] = signed
+                    signaturePNGs[typeSnapshot] = png
                 } catch {
                     self.error = error.localizedDescription
                     isSubmitting = false
@@ -255,11 +259,11 @@ struct ConsentPage: View {
 
     private func performSubmit(progress: @MainActor @escaping (String) -> Void) async throws {
         // 1. Build the list of signed consents to upload. Order is stable (requiredTypes order).
-        var signed: [(type: ConsentFormType, formId: Int, pdf: Data)] = []
+        var signed: [(type: ConsentFormType, formId: Int, pdf: Data, png: Data?)] = []
         for type in requiredTypes {
             guard let pdf = signedPDFs[type] else { continue } // skipped by the customer
             guard let entry = await ConsentPDFCache.shared.entry(type) else { continue }
-            signed.append((type, entry.id, pdf))
+            signed.append((type, entry.id, pdf, signaturePNGs[type]))
         }
 
         // 2. Agreement booleans — signing = agreeing.
@@ -294,7 +298,8 @@ struct ConsentPage: View {
                  emailAgreement:     s.type == .email     ? emailOK : false,
                  smsAgreement:       s.type == .phone     ? smsOK   : false,
                  marketingAgreement: s.type == .marketing ? mktOK   : false,
-                 customerId: appState.draft.person?.clientId)
+                 customerId: appState.draft.person?.clientId,
+                 signaturePNG: s.png)
             }
             try offlineQueue.enqueue(
                 appointmentBody: appointmentBody,
@@ -308,7 +313,7 @@ struct ConsentPage: View {
     private func submitOnline(
         appointmentBody: Data,
         newCustomerBody: Data?,
-        signed: [(type: ConsentFormType, formId: Int, pdf: Data)],
+        signed: [(type: ConsentFormType, formId: Int, pdf: Data, png: Data?)],
         emailOK: Bool, smsOK: Bool, mktOK: Bool,
         progress: @MainActor (String) -> Void
     ) async throws {
@@ -341,7 +346,8 @@ struct ConsentPage: View {
                 fileName: "\(s.type.rawValue).pdf",
                 emailAgreement:     s.type == .email     ? emailOK : false,
                 smsAgreement:       s.type == .phone     ? smsOK   : false,
-                marketingAgreement: s.type == .marketing ? mktOK   : false
+                marketingAgreement: s.type == .marketing ? mktOK   : false,
+                signaturePNG: s.png
             )
         }
 

@@ -26,13 +26,21 @@ struct ConsentFormsAPI {
         fileName: String,
         emailAgreement: Bool,
         smsAgreement: Bool,
-        marketingAgreement: Bool
+        marketingAgreement: Bool,
+        signaturePNG: Data? = nil
     ) async throws -> Int {
         struct Resp: Decodable { let id: Int }
+        // The raw signature PNG lets the server flatten name/phone/signature/date
+        // onto the template at the correct positions (server-side compositing).
+        // The `file` PDF is still sent for back-compat / forms without a layout.
         let data = try await Endpoints.consentAPI.uploadMultipart(
             "/consent-forms/signatures",
             fileData: pdfData,
             fileName: fileName,
+            extraFileField: signaturePNG != nil ? "signature_png" : nil,
+            extraFileData: signaturePNG,
+            extraFileName: "signature.png",
+            extraFileMime: "image/png",
             fields: [
                 "consent_form_id":     String(consentFormId),
                 "customer_id":         String(customerId),

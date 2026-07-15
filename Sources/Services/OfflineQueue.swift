@@ -47,7 +47,7 @@ final class OfflineQueue: ObservableObject {
         newCustomerBody: Data?,
         signedConsents: [(type: ConsentFormType, pdf: Data, consentFormId: Int,
                           emailAgreement: Bool, smsAgreement: Bool, marketingAgreement: Bool,
-                          customerId: Int?)],
+                          customerId: Int?, signaturePNG: Data?)],
         commPrefs: CommPrefs
     ) throws {
         let stamp = String(Int(Date().timeIntervalSince1970 * 1000))
@@ -66,6 +66,10 @@ final class OfflineQueue: ObservableObject {
             let pdfURL  = dir.appendingPathComponent("\(c.type.rawValue).pdf")
             let metaURL = dir.appendingPathComponent("\(c.type.rawValue).meta.json")
             try c.pdf.write(to: pdfURL, options: .atomic)
+            // Keep the raw signature next to the PDF so replay can server-composite.
+            if let png = c.signaturePNG {
+                try png.write(to: dir.appendingPathComponent("\(c.type.rawValue).png"), options: .atomic)
+            }
             let meta = PendingConsentMeta(
                 consentFormId:       c.consentFormId,
                 emailAgreement:      c.emailAgreement,
@@ -155,6 +159,8 @@ final class OfflineQueue: ObservableObject {
                   let meta = try? JSONDecoder().decode(PendingConsentMeta.self, from: metaData),
                   let pdf = try? Data(contentsOf: pdfURL)
             else { continue }
+            let pngURL = pdfURL.deletingPathExtension().appendingPathExtension("png")
+            let signaturePNG = try? Data(contentsOf: pngURL)
             _ = try await consentAPI.uploadSigned(
                 consentFormId:      meta.consentFormId,
                 customerId:         cid,
@@ -162,7 +168,8 @@ final class OfflineQueue: ObservableObject {
                 fileName:           pdfURL.lastPathComponent,
                 emailAgreement:     meta.emailAgreement,
                 smsAgreement:       meta.smsAgreement,
-                marketingAgreement: meta.marketingAgreement
+                marketingAgreement: meta.marketingAgreement,
+                signaturePNG:       signaturePNG
             )
         }
 

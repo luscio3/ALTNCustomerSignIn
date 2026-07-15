@@ -59,13 +59,17 @@ struct APIClient {
 
     // MARK: - Multipart
 
-    /// POST a single file plus form fields. Returns the raw body on success.
+    /// POST a file (plus an optional second file) and form fields. Returns the raw body on success.
     func uploadMultipart(
         _ path: String,
         fileField: String = "file",
         fileData: Data,
         fileName: String,
         fileMime: String = "application/pdf",
+        extraFileField: String? = nil,
+        extraFileData: Data? = nil,
+        extraFileName: String? = nil,
+        extraFileMime: String = "image/png",
         fields: [String: String] = [:],
         timeout: TimeInterval? = nil
     ) async throws -> Data {
@@ -89,6 +93,14 @@ struct APIClient {
         body.append("Content-Type: \(fileMime)\(nl)\(nl)".data(using: .utf8)!)
         body.append(fileData)
         body.append(nl.data(using: .utf8)!)
+        if let ef = extraFileField, let ed = extraFileData {
+            let efn = extraFileName ?? "\(ef).bin"
+            body.append("--\(boundary)\(nl)".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(ef)\"; filename=\"\(efn)\"\(nl)".data(using: .utf8)!)
+            body.append("Content-Type: \(extraFileMime)\(nl)\(nl)".data(using: .utf8)!)
+            body.append(ed)
+            body.append(nl.data(using: .utf8)!)
+        }
         body.append("--\(boundary)--\(nl)".data(using: .utf8)!)
         req.httpBody = body
 
