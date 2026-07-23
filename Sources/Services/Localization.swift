@@ -161,6 +161,11 @@ enum LocKey {
     // ── EmptyCatalogNotice ──
     case catalogUnavailable
     case catalogUnavailableDetail
+    case catalogAuthFailure
+    case catalogAuthFailureDetail
+    case catalogServerError
+    case catalogServerErrorDetail
+    case catalogRetry
 
     // ── Top bar language-toggle button ──
     // The button label always names the OTHER language (the one you'd switch
@@ -256,6 +261,13 @@ enum LocKey {
         case .catalogUnavailable:         return "Service catalog unavailable"
         case .catalogUnavailableDetail:
             return "Connect this iPad to the Internet at least once to load the service list. The sign-in app stays usable afterward — even offline."
+        case .catalogAuthFailure:         return "App update required"
+        case .catalogAuthFailureDetail:
+            return "The server rejected this app's access key — this build is out of date. Please ask staff to update the ALTN Sign-in app on this iPad."
+        case .catalogServerError:         return "Couldn't load the service list"
+        case .catalogServerErrorDetail:
+            return "The server had a problem answering. Please try again in a moment."
+        case .catalogRetry:               return "Retry"
 
         case .languageToggleLabel:        return "Español"
         }
@@ -350,6 +362,13 @@ enum LocKey {
         case .catalogUnavailable:         return "Catálogo de servicios no disponible"
         case .catalogUnavailableDetail:
             return "Conecte este iPad a Internet al menos una vez para cargar la lista de servicios. La app de registro seguirá funcionando después — incluso sin conexión."
+        case .catalogAuthFailure:         return "Se requiere actualizar la app"
+        case .catalogAuthFailureDetail:
+            return "El servidor rechazó la clave de acceso de esta app — esta versión está desactualizada. Pida al personal que actualice la app de registro ALTN en este iPad."
+        case .catalogServerError:         return "No se pudo cargar la lista de servicios"
+        case .catalogServerErrorDetail:
+            return "El servidor tuvo un problema al responder. Por favor intente de nuevo en un momento."
+        case .catalogRetry:               return "Reintentar"
 
         case .languageToggleLabel:        return "English"
         }

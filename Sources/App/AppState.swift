@@ -20,6 +20,17 @@ final class AppState: ObservableObject {
     // MARK: - Services catalog (per franchise+location), cached for offline
     @Published var services: Services?
 
+    /// Why the most recent catalog refresh failed. Nil after a successful refresh.
+    /// Drives the EmptyCatalogNotice copy so an auth failure (stale baked-in token,
+    /// e.g. an outdated app build after a key rotation) isn't misreported as "offline".
+    @Published var catalogFailure: CatalogFailure?
+
+    enum CatalogFailure {
+        case offline        // transport error — no route to the server
+        case unauthorized   // server rejected our token (401/403) — app build is stale
+        case serverError    // reached the server, got a non-auth HTTP error
+    }
+
     // MARK: - Franchise info (vitamin category name override)
     @Published var franchiseInfo: FranchiseInfo?
 
